@@ -1,0 +1,159 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. User Model
+model User {
+  id                     String       @id @default(dbgenerated()) @map("id") // Firebase UID
+  email                  String?      @unique
+  name                   String
+  profile_picture_url    String?      @map("profile_picture_url")
+  // New additions for social showcase:
+  bio                    String?      @db.Text @map("bio") // A short descriptive text about the user
+  interests              String[]     @map("interests") // Array of strings for hobbies/interests (e.g., ["reading", "hiking", "tech"])
+  social_media_link      String?      @map("social_media_link") // Optional link to a personal/professional social media profile
+  occupation             String?      @map("occupation") // User's profession or field of study
+  birth_date             DateTime?    @map("birth_date") // For age verification or demographic insights (consider privacy)
+  gender                 String?      @map("gender") // Optional: "Male", "Female", "Non-binary", "Prefer not to say"
+  // End of new additions
+
+  is_active              Boolean      @default(true) @map("is_active")
+  created_at             DateTime     @default(now()) @map("created_at")
+  updated_at             DateTime     @updatedAt @map("updated_at")
+  last_known_location_lat Decimal?    @db.Decimal(10, 7) @map("last_known_location_lat")
+  last_known_location_lon Decimal?    @db.Decimal(10, 7) @map("last_known_location_lon")
+
+  // Relations (as previously defined)
+  dailyRoutes            UserDailyRoute[]
+  sentMessages           Message[]      @relation("SenderMessages")
+  conversationsAsP1      Conversation[] @relation("Participant1")
+  conversationsAsP2      Conversation[] @relation("Participant2")
+  matchesAsUser1         Match[]        @relation("User1Matches")
+  matchesAsUser2         Match[]        @relation("User2Matches")
+
+  @@map("users") // Map the model name 'User' to the table name 'users'
+}
+
+// 2. MetroStation Model
+model MetroStation {
+  id             String         @id @map("id") // GTFS stop_id
+  name           String         @unique
+  latitude       Decimal        @db.Decimal(10, 7)
+  longitude      Decimal        @db.Decimal(10, 7)
+  line_ids       String[]       // Array of MetroLine IDs passing through this station
+  is_active      Boolean        @default(true) @map("is_active")
+
+  // Relations
+  startOfDailyRoutes UserDailyRoute[] @relation("StartStation")
+  endOfDailyRoutes   UserDailyRoute[] @relation("EndStation")
+
+  @@map("metro_stations")
+}
+
+// 3. MetroLine Model
+model MetroLine {
+  id                    String    @id @default(dbgenerated()) @map("id") // GTFS route_id
+  name                  String    @unique
+  color_hex             String?   @map("color_hex")
+  station_ids_sequence  String[]  @map("station_ids_sequence") // Ordered array of MetroStation IDs
+
+  @@map("metro_lines")
+}
+
+// 4. UserDailyRoute Model
+model UserDailyRoute {
+  id                        String         @id @default(uuid()) // Using UUID for robust unique identification
+  user_id                   String         @map("user_id") // Foreign key to the User
+  start_station_id          String         @map("start_station_id") // Foreign key to MetroStation
+  end_station_id            String         @map("end_station_id")   // Foreign key to MetroStation
+  calculated_station_ids_path String[]     @map("calculated_station_ids_path") // The full sequence of stations on the optimized path (can involve transfers)
+  days_of_week              Int[]          @map("days_of_week") // Array of integers (1=Monday, 7=Sunday)
+  preferred_start_time      DateTime?      @map("preferred_start_time") @db.Time // TIME type for preferred travel time
+  is_active                 Boolean        @default(true) @map("is_active") // To activate/deactivate a route
+  created_at                DateTime       @default(now()) @map("created_at")
+  updated_at                DateTime       @updatedAt @map("updated_at")
+
+  // Relations
+  user         User         @relation(fields: [user_id], references: [id])
+  startStation MetroStation @relation("StartStation", fields: [start_station_id], references: [id])
+  endStation   MetroStation @relation("EndStation", fields: [end_station_id], references: [id])
+
+  // Optional: If you want to link matches directly to the route that caused them
+  matchesAsRoute1 Match[] @relation("Route1Match")
+  matchesAsRoute2 Match[] @relation("Route2Match")
+
+
+  @@map("user_daily_routes")
+}
+
+// 5. Match Model
+model Match {
+  id                          String         @id @default(uuid())
+  user1_id                    String         @map("user1_id")
+  user2_id                    String         @map("user2_id")
+  user_daily_route1_id        String         @map("user_daily_route1_id") // ID of user1's route that matched
+  user_daily_route2_id        String         @map("user_daily_route2_id") // ID of user2's route that matched
+  overlapping_stations_count  Int            @map("overlapping_stations_count") // Number of common stations
+  common_station_ids_sequence String[]       @map("common_station_ids_sequence") // Optional: The actual sequence of common stations
+  match_score                 Decimal?       @map("match_score") @db.Decimal(5, 2) // Custom score for match quality
+  match_timestamp             DateTime       @default(now()) @map("match_timestamp")
+  status                      String         @default("pending") // e.g., 'pending', 'accepted', 'rejected', 'unmatched'
+  is_active                   Boolean        @default(true) @map("is_active")
+
+  // Relations
+  user1      User         @relation("User1Matches", fields: [user1_id], references: [id])
+  user2      User         @relation("User2Matches", fields: [user2_id], references: [id])
+  route1     UserDailyRoute @relation("Route1Match", fields: [user_daily_route1_id], references: [id])
+  route2     UserDailyRoute @relation("Route2Match", fields: [user_daily_route2_id], references: [id])
+
+  // Ensure a unique match record for any pair of users and their specific routes
+  @@unique([user1_id, user2_id, user_daily_route1_id, user_daily_route2_id])
+  @@map("matches")
+}
+
+// 6. Conversation Model
+model Conversation {
+  id                     String    @id @default(uuid())
+  participant1_id        String    @map("participant1_id") // Foreign key to User (e.g., lower ID alphabetically)
+  participant2_id        String    @map("participant2_id") // Foreign key to User (e.g., higher ID alphabetically)
+  last_message_timestamp DateTime? @map("last_message_timestamp")
+  created_at             DateTime  @default(now()) @map("created_at")
+  updated_at             DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  participant1 User      @relation("Participant1", fields: [participant1_id], references: [id])
+  participant2 User      @relation("Participant2", fields: [participant2_id], references: [id])
+  messages     Message[] // Relation to individual messages within this conversation
+
+  // Ensures only one conversation exists between any two participants
+  @@unique([participant1_id, participant2_id])
+  @@map("conversations")
+}
+
+// 7. Message Model
+model Message {
+  id              String       @id @default(uuid())
+  conversation_id String       @map("conversation_id") // Foreign key to the Conversation
+  sender_id       String       @map("sender_id")       // Foreign key to the User who sent the message
+  content         String       @db.Text             // The message content itself
+  timestamp       DateTime     @default(now())       // When the message was sent
+  is_read         Boolean      @default(false)      @map("is_read") // For read receipts
+
+  // Relations
+  conversation Conversation @relation(fields: [conversation_id], references: [id])
+  sender       User         @relation("SenderMessages", fields: [sender_id], references: [id])
+
+  @@map("messages")
+}
+
