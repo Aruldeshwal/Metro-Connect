@@ -1,36 +1,236 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚇 Metro Connect
 
-## Getting Started
+Metro Connect is a full-stack web application designed to help commuters find and connect with other people traveling along the same metro routes. It enables users to set daily routes, discover relevant commuters, and coordinate through an intuitive interface.
 
-First, run the development server:
+The goal of the project is to make daily commuting smarter, more social, and more efficient.
+
+---
+
+## ✨ Features
+
+- 🔐 Secure Authentication (Clerk)
+- 👤 User Profile Creation & Management
+- 🗺 Route Setup (Start & End Stations)
+- 🧠 Shortest Route Calculation (BFS-based graph traversal)
+- 📅 Daily Route Scheduling
+- 💬 Commuter Matching Foundation
+- 📊 Dashboard with Active Link Status
+- 🎨 Modern UI with Tailwind + Motion Animations
+
+---
+
+## 🏗 Tech Stack
+
+### Frontend
+- **Next.js (App Router)**
+- **React**
+- **TypeScript**
+- **Tailwind CSS**
+- **Framer Motion**
+- **shadcn/ui**
+
+### Backend
+- **Next.js API Routes**
+- **Prisma ORM**
+- **PostgreSQL (or compatible database)**
+
+### Authentication
+- **Clerk**
+
+---
+
+## 📁 Project Structure
+
+```
+src/
+│
+├── app/
+│   ├── api/                    # API route handlers
+│   │   ├── users/
+│   │   └── stationRouteSearch/
+│   │
+│   ├── dashboard/              # User dashboard
+│   ├── main/                   # Landing sections
+│   ├── (links)/                # Static informational pages
+│   └── layout.tsx
+│
+├── components/                 # Reusable UI components
+├── lib/                        # Utility logic (Prisma, graph, etc.)
+├── hooks/                      # Custom hooks
+└── styles/
+```
+
+---
+
+## 🧠 Route Calculation Logic
+
+Metro Connect uses a **Breadth-First Search (BFS)** algorithm to calculate the shortest metro path between two stations.
+
+```ts
+type AdjacencyList = Map<string, Set<string>>;
+```
+
+- Time Complexity: `O(V + E)`
+- Space Complexity: `O(V)`
+
+This ensures optimal shortest path discovery in an unweighted graph.
+
+---
+
+## 🔐 Authentication Flow
+
+- Users sign in using Clerk.
+- User ID is validated inside protected API routes.
+- Server-side route handlers verify:
+  ```ts
+  const user = await currentUser();
+  ```
+- Only authenticated users can update profiles or create routes.
+
+---
+
+## ⚙️ Environment Variables
+
+Create a `.env` file:
+
+```env
+# Clerk
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_key
+CLERK_SECRET_KEY=your_secret
+
+# Database
+DATABASE_URL=your_database_url
+
+# (Optional) Other service keys
+```
+
+Never commit `.env` files.
+
+---
+
+## 🗄 Database (Prisma)
+
+Initialize Prisma:
+
+```bash
+npx prisma generate
+npx prisma migrate dev
+```
+
+Example model structure:
+
+```prisma
+model User {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String?  @unique
+  ...
+}
+```
+
+---
+
+## 🚀 Running Locally
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/Aruldeshwal/Metro-Connect.git
+cd Metro-Connect
+```
+
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Setup environment variables.
+
+4. Run development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+App runs at:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🏗 Build for Production
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run build
+npm start
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## ☁ Deployment
 
-## Deploy on Vercel
+Recommended deployment platform:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Vercel**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Steps:
+1. Push repository to GitHub.
+2. Import into Vercel.
+3. Add environment variables in dashboard.
+4. Deploy.
+
+---
+
+## 🧩 Architecture Notes
+
+- Uses App Router.
+- Server Components by default.
+- Client Components explicitly marked with `"use client"`.
+- API routes follow Next.js 15 async params convention:
+  ```ts
+  { params }: { params: Promise<{ userId: string }> }
+  ```
+
+---
+
+## 🔒 Security Considerations
+
+- Clerk validates authenticated users.
+- Protected API routes verify user ID ownership.
+- Prisma guards against injection.
+- No sensitive data exposed to client.
+
+---
+
+## 📌 Future Improvements
+
+- Real-time matching
+- WebSocket chat
+- Notification system
+- Route optimization enhancements
+- Admin analytics panel
+- Role-based access control
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+---
+
+## 👤 Author
+
+**Arul Deshwal**  
+GitHub: https://github.com/Aruldeshwal
+
+---
+
+## 🎯 Project Vision
+
+Metro Connect aims to transform daily commuting from an isolated routine into a connected experience. By combining graph algorithms, authentication, and intuitive UI design, it demonstrates how full-stack engineering can solve real-world inefficiencies.
+
+---
