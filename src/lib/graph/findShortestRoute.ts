@@ -4,14 +4,14 @@ export const findShortestRoute = (
     startStationId: string,
     endStationId: string, 
     graph : AdjacencyList
-): string[] | null => {
+): string[] => {
     
     if (startStationId === endStationId) {
         return [startStationId];
     }
     if (!graph.has(startStationId) || !graph.has(endStationId)) {
         console.warn('One or both stations do not exist in the graph.');
-        return null;
+        return [];
     }
 
     const queue: string[][] = [[startStationId]];
@@ -40,5 +40,5 @@ export const findShortestRoute = (
         }
     }
 
-    return null;
+    return [];
 };

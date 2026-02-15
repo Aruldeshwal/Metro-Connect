@@ -119,4 +119,36 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* --- Compact & Sleek Dark-Themed Scrollbar --- */
+
+  /* For WebKit-based browsers (Chrome, Safari, Edge) */
+  body::-webkit-scrollbar {
+    width: 8px; /* Slender scrollbar width */
+  }
+
+  body::-webkit-scrollbar-track {
+    background: #1a1a1a; /* Dark track background, blends with dark themes */
+  }
+
+  body::-webkit-scrollbar-thumb {
+    background-color: #4a4a4a; /* A subtle, medium-dark grey for the thumb */
+    border-radius: 20px; /* Creates the pill shape */
+    border: 2px solid #1a1a1a; /* Creates a "padding" effect around the thumb */
+  }
+
+  body::-webkit-scrollbar-thumb:hover {
+    background-color: #6a6a6a; /* Slightly lighter grey on hover for feedback */
+  }
+
+  /* For Firefox */
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: #4a4a4a #1a1a1a; /* thumb color and track color */
+    scroll-behavior: smooth;
+  }
+  
+}
+@keyframes gradientSlide {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }

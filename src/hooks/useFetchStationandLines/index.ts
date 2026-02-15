@@ -1,5 +1,5 @@
 import { MetroStation } from "@/types/metrostation";
-import { useEffect, RefObject, useRef } from "react"; 
+import { useEffect, useRef } from "react"; 
 import { toast } from "sonner";
 import { MetroLine } from "@/types/metroline";
 
@@ -64,7 +64,7 @@ const useFetchStationAndLine = ({ setStations, setLines }: UseFetchStationAndLin
 
     fetchStations();
     fetchLines();
-  }, []); 
+  }, [setLines, setStations]); 
 };
 
 export default useFetchStationAndLine;
