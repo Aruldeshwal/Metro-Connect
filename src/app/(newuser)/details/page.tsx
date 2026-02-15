@@ -1,203 +1,355 @@
-// src/app/(newuser)/details/page.tsx
 "use client";
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useUser } from '@clerk/nextjs';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
+import { motion } from "framer-motion";
+import { FiUser, FiBriefcase, FiLink } from "react-icons/fi";
 
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
 type Gender = "Male" | "Female" | "Non-binary" | "Prefer not to say" | "";
+type FormData = {
+  name: string;
+  bio: string;
+  occupation: string;
+  birthDate: string;
+  gender: Gender;
+  interests: string;
+  socialMediaLink: string;
+};
+
+
+const VerticalConnectorBar = ({ currentStep }: { currentStep: number }) => {
+  // Step 1 → 0%, Step 2 → 50%, Step 3 → 100%
+  const progressHeight = (currentStep - 1) * 50;
+
+  return (
+    <div className="absolute inset-y-0 left-1/2 hidden lg:block h-[calc(76%-5rem)]">
+      {/* Base Line */}
+      <div className="absolute top-80 w-2 h-full bg-slate-700/50 rounded-full transform -translate-x-1/2" />
+
+      {/* Progress Fill */}
+      <motion.div
+        className="absolute w-2 top-80 bg-teal-400 rounded-full transform -translate-x-1/2 origin-top"
+        initial={{ height: "0%" }}
+        animate={{ height: `${progressHeight}%` }}
+        transition={{ duration: 0.8, ease: "easeInOut" }}
+      >
+        {/* Circle at end of progress */}
+        <motion.div
+          className="absolute left-1/2 w-4 h-4 bg-teal-400 rounded-full shadow-[0_0_10px_3px_rgba(45,212,191,0.7)]"
+          style={{
+            bottom: 0, // keeps it stuck to the tip of the progress bar
+            transform: "translate(-50%, 50%)", // centers it horizontally & places it just past the edge
+          }}
+          layout
+          transition={{ duration: 0.8, ease: "easeInOut" }}
+        />
+      </motion.div>
+    </div>
+  );
+};
+
 
 export default function UserDetailsFormPage() {
   const { user, isLoaded } = useUser();
+  const [currentStep, setCurrentStep] = useState(1);
   const router = useRouter();
 
-  const [name, setName] = useState(user?.fullName || user?.username || '');
-  const [bio, setBio] = useState('');
-  const [interests, setInterests] = useState('');
-  const [socialMediaLink, setSocialMediaLink] = useState('');
-  const [occupation, setOccupation] = useState('');
-  const [birthDate, setBirthDate] = useState('');
-  const [gender, setGender] = useState<Gender>('');
+  const [formData, setFormData] = useState<FormData>({
+    name: "",
+    bio: "",
+    occupation: "",
+    birthDate: "",
+    gender: "",
+    interests: "",
+    socialMediaLink: "",
+  });
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-    setSuccess(null);
-
-    if (!user) {
-      setError("User not authenticated. Please sign in.");
-      setIsLoading(false);
-      return;
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        name: user.fullName || user.username || "",
+      }));
     }
+  }, [user]);
 
-    const userId = user.id;
 
-    try {
-      const formData = {
-        name: name,
-        bio: bio || null,
-        interests: interests.split(',').map(s => s.trim()).filter(Boolean),
-        social_media_link: socialMediaLink || null,
-        occupation: occupation || null,
-        birth_date: birthDate ? new Date(birthDate).toISOString() : null,
-        gender: gender || null,
-      };
 
-      const response = await fetch(`/api/users/${userId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update profile.');
-      }
-
-      setSuccess("Profile updated successfully!");
-      router.push('/dashboard');
-    } catch (err: any) {
-      console.error("Profile update error:", err);
-      setError(err.message || "An unexpected error occurred during profile update.");
-    } finally {
-      setIsLoading(false);
-    }
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
-  if (!isLoaded || !user) {
+  const handleGenderChange = (value: Gender) => {
+    setFormData((prev) => ({ ...prev, gender: value }));
+  };
+
+  const handleFinalSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  setError(null);
+
+  if (!formData.name.trim() || !formData.gender) {
+    setError(
+      "Please ensure all required fields (Display Name and Gender) are filled out before submitting."
+    );
+    return;
+  }
+
+  setIsLoading(true);
+
+  if (!user) {
+    setError("User not authenticated.");
+    setIsLoading(false);
+    return;
+  }
+
+  try {
+    const finalData = {
+      name: formData.name,
+      bio: formData.bio || null,
+      interests: formData.interests
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+      social_media_link: formData.socialMediaLink || null,
+      occupation: formData.occupation || null,
+      birth_date: formData.birthDate
+        ? new Date(formData.birthDate).toISOString()
+        : null,
+      gender: formData.gender,
+    };
+
+    const response = await fetch(`/api/users/${user.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(finalData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to update profile.");
+    }
+
+    router.push("/set-route");
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      setError(err.message);
+    } else {
+      setError("An unexpected error occurred.");
+    }
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+  if (!isLoaded) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-[#b0a8b9]">
-        <p className="text-[#4b4453]">Loading user data...</p>
+      <div className="flex justify-center items-center h-screen w-screen bg-[#0d0d0d]">
+        <p className="text-gray-400">Loading...</p>
       </div>
     );
   }
 
+
+  
+
   return (
-    <div className="flex justify-center items-center min-h-screen bg-[#b0a8b9] p-4">
-      <div className="bg-white dark:bg-[#4b4453] p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-2xl font-bold text-[#845ec2] mb-6 text-center">
-          Complete Your Profile
-        </h2>
-        <p className="text-[#4b4453] dark:text-[#b0a8b9] text-center mb-8">
-          Tell us a little more about yourself to help others connect with you.
-        </p>
+    <div className="flex flex-col items-center justify-start min-h-screen w-screen bg-[#0d0d0d] p-10 lg:p-20"> 
+      <div className="w-full max-w-screen-xl"> 
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="pb-12"
+        >
+          <form onSubmit={handleFinalSubmit}>
+            
+            <h2 className="text-6xl lg:text-8xl font-extrabold text-white mb-16 text-center border-b border-teal-500/30 pb-8">
+              Complete Your Profile
+            </h2>
+            
+            {/* Fields Container: GRID LAYOUT FOR ZIG-ZAG - RELATIVE FOR PROGRESS BAR */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-20 relative">
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="name" className="text-[#4b4453] dark:text-[#b0a8b9]">Display Name</Label>
-            <Input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="mt-1 border-[#845ec2] focus:border-[#845ec2] focus:ring-[#845ec2]"
-            />
-          </div>
+                {/* 🌟 VERTICAL CONNECTOR BAR (Progress Visualizer) 🌟 */}
+                <VerticalConnectorBar currentStep={currentStep} />
+            
+                {/* 1. IDENTITY - TOP LEFT (col 1, row 1) */}
+                {/* JUSTIFY-END to push the card to the right side of the left column (next to the bar) */}
+                <div className="col-span-1 row-start-1 **flex justify-end** z-10 mt-20">
+                  <div className="max-w-xl w-full p-10 bg-slate-800/70 rounded-xl shadow-2xl">
+                    <h3 className="text-4xl text-slate-300 flex items-center mb-8 mt-4">
+                      <FiUser className="w-10 h-10 mr-5 text-slate-400" /> Your Identity
+                    </h3>
+                    {/* ... (Identity Card Content) ... */}
+                    <div className="mt-8 pt-6 border-t border-slate-700">
+                      {/* ... (Input fields) ... */}
+                      <div className="mb-8">
+                        <Label htmlFor="name" className="text-xl text-gray-400 block mb-2">
+                          Display Name <span className="text-slate-400">*</span>
+                        </Label>
+                        <Input
+                          id="name"
+                          type="text"
+                          value={formData.name}
+                          onChange={handleChange}
+                          required
+                          className="bg-slate-700/80 border-slate-500/50 focus:ring-2 focus:ring-slate-400 text-white text-xl p-4 w-full"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="bio" className="text-xl text-slate-400 block mb-2">
+                          Your Bio (Optional)
+                        </Label>
+                        <Textarea
+                          id="bio"
+                          value={formData.bio}
+                          onChange={handleChange}
+                          placeholder="A short, engaging description about yourself..."
+                          rows={5}
+                          className="bg-slate-700/80 border-slate-500/50 focus:ring-2 focus:ring-slate-400 text-white text-xl p-4 w-full resize-none"
+                        />
+                      </div>
+                      <div className="mt-8 pt-6 border-t border-slate-700">
+                        <a href="#personal" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentStep(2);
+                            document.querySelector("#personal")?.scrollIntoView({ behavior: "smooth" });
+                          }}
+                          className="w-full block text-center py-3 bg-slate-500 hover:bg-slate-600 text-white font-semibold rounded-lg transition duration-200 text-xl"
+                        >
+                          Next
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-          <div>
-            <Label htmlFor="bio" className="text-[#4b4453] dark:text-[#b0a8b9]">Bio (Optional)</Label>
-            <Textarea
-              id="bio"
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              placeholder="A short description about yourself..."
-              rows={3}
-              className="mt-1 border-[#845ec2] focus:border-[#845ec2] focus:ring-[#845ec2]"
-            />
-          </div>
+                {/* *** NEW FILLER ELEMENT ***
+                  This placeholder pushes the "Personal" card down, creating the staggered effect.
+                  It needs to be in the Top Right slot (col 2, row 1).
+                */}
+                <div className="hidden lg:block col-span-1 row-start-1 justify-start">
+                    {/* Placeholder content to take up vertical space, adjust height (h-full/h-96) as needed for spacing */}
+                    <div className="h-96 w-full" /> 
+                </div>
 
-          <div>
-            <Label htmlFor="interests" className="text-[#4b4453] dark:text-[#b0a8b9]">Interests (Optional, comma-separated)</Label>
-            <Input
-              id="interests"
-              type="text"
-              value={interests}
-              onChange={(e) => setInterests(e.target.value)}
-              placeholder="e.g., hiking, coding, reading"
-              className="mt-1 border-[#845ec2] focus:border-[#845ec2] focus:ring-[#845ec2]"
-            />
-          </div>
+                
+                {/* 2. PERSONAL & PROFESSIONAL - MIDDLE RIGHT (col 2, row 2) */}
+                <div id="personal" className="col-span-1 mt-30 row-start-2 col-start-2 flex justify-end z-10">
+                  <div className="max-w-xl w-full p-10 bg-slate-800/70 rounded-xl shadow-2xl">
+                    <h3 className="text-4xl text-cyan-400 flex items-center mb-8 mt-4">
+                      <FiBriefcase className="w-10 h-10 mr-5 text-cyan-500" /> Personal & Professional
+                    </h3>
+                    <div className="mt-8 pt-6 border-t border-slate-700">
+                      <div className="grid grid-cols-1 gap-8">
+                        <div className="col-span-1">
+                          <Label htmlFor="occupation" className="text-xl text-gray-200 block mb-2">Occupation (Optional)</Label>
+                          <Input id="occupation" type="text" value={formData.occupation} onChange={handleChange} placeholder="Engineer, Artist, Writer" className="bg-slate-700/80 border-cyan-500/50 focus:ring-2 focus:ring-cyan-400 text-white text-xl p-4 w-full"/>
+                        </div>
+                        <div className="col-span-1">
+                          <Label htmlFor="birthDate" className="text-xl text-gray-200 block mb-2">Birth Date (Optional)</Label>
+                          <Input id="birthDate" type="date" value={formData.birthDate} onChange={handleChange} className="bg-slate-700/80 border-cyan-500/50 focus:ring-2 focus:ring-cyan-400 text-white text-xl p-4 w-full"/>
+                        </div>
+                        <div className="col-span-1">
+                          <Label htmlFor="gender" className="text-xl text-gray-200 block mb-2">Gender <span className="text-cyan-400">*</span></Label>
+                          <Select onValueChange={handleGenderChange} value={formData.gender} required>
+                            <SelectTrigger className="w-full bg-slate-700/80 border-cyan-500/50 focus:ring-2 focus:ring-cyan-400 text-white text-xl h-auto p-4"><SelectValue placeholder="Select..." /></SelectTrigger>
+                            <SelectContent className="bg-gray-900 border-cyan-500/30 text-white text-xl">
+                              <SelectItem value="Male">Male</SelectItem>
+                              <SelectItem value="Female">Female</SelectItem>
+                              <SelectItem value="Non-binary">Non-binary</SelectItem>
+                              <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="mt-8 pt-6 border-t border-slate-700">
+                        <a href="#connectivity" 
+                          onClick={(e) => {
+                            e.preventDefault(); // stop anchor jump
+                            setCurrentStep(3)
+                            document.querySelector("#connectivity")?.scrollIntoView({ behavior: "smooth" }
+                          );}}
+                          className="w-full block text-center py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-lg transition duration-200 text-xl"
+                        >
+                          Next
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-          <div>
-            <Label htmlFor="socialMediaLink" className="text-[#4b4453] dark:text-[#b0a8b9]">Social Media Link (Optional)</Label>
-            <Input
-              id="socialMediaLink"
-              type="url"
-              value={socialMediaLink}
-              onChange={(e) => setSocialMediaLink(e.target.value)}
-              placeholder="e.g., https://linkedin.com/in/yourprofile"
-              className="mt-1 border-[#845ec2] focus:border-[#845ec2] focus:ring-[#845ec2]"
-            />
-          </div>
+                
+                {/* 3. CONNECTIVITY - BOTTOM LEFT (col 1, row 3) */}
+                {/* JUSTIFY-END to push the card to the right side of the left column (next to the bar) */}
+                <div className="col-span-1 row-start-3 mt-20 flex justify-start z-10" id="connectivity">
+                  <div className="max-w-xl w-full p-10 bg-slate-800/70 rounded-xl shadow-2xl">
+                    <h3 className="text-4xl text-amber-400 flex items-center mb-8 mt-4">
+                      <FiLink className="w-10 h-10 mr-5 text-amber-500" /> Connectivity
+                    </h3>
+                    {/* ... (Connectivity Card Content) ... */}
+                    <div className="mt-8 pt-6 border-t border-slate-700">
+                      <div className="mb-8">
+                        <Label htmlFor="interests" className="text-xl text-gray-200 block mb-2">Interests (comma-separated, Optional)</Label>
+                        <Input id="interests" type="text" value={formData.interests} onChange={handleChange} placeholder="e.g., hiking, coding, jazz music" className="bg-slate-700/80 border-amber-500/50 focus:ring-2 focus:ring-amber-400 text-white text-xl p-4 w-full"/>
+                      </div>
+                      <div className="mb-8">
+                        <Label htmlFor="socialMediaLink" className="text-xl text-gray-200 block mb-2">Social Media Link (Optional)</Label>
+                        <Input id="socialMediaLink" type="url" value={formData.socialMediaLink} onChange={handleChange} placeholder="https://linkedin.com/in/yourprofile" className="bg-slate-700/80 border-amber-500/50 focus:ring-2 focus:ring-amber-400 text-white text-xl p-4 w-full"/>
+                      </div>
+                    </div>
+                    
+                    {/* === SUBMIT SECTION (Inside Card 3) === */}
+                    <div className="mt-8 pt-6 border-t border-slate-700">
+                      
+                      {/* Error Message */}
+                      {error && (
+                        <p className="text-red-500 text-xl mb-6 text-center">{error}</p>
+                      )}
 
-          <div>
-            <Label htmlFor="occupation" className="text-[#4b4453] dark:text-[#b0a8b9]">Occupation (Optional)</Label>
-            <Input
-              id="occupation"
-              type="text"
-              value={occupation}
-              onChange={(e) => setOccupation(e.target.value)}
-              placeholder="e.g., Software Engineer, Student"
-              className="mt-1 border-[#845ec2] focus:border-[#845ec2] focus:ring-[#845ec2]"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="birthDate" className="text-[#4b4453] dark:text-[#b0a8b9]">Birth Date (Optional)</Label>
-            <Input
-              id="birthDate"
-              type="date"
-              value={birthDate}
-              onChange={(e) => setBirthDate(e.target.value)}
-              className="mt-1 border-[#845ec2] focus:border-[#845ec2] focus:ring-[#845ec2]"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="gender" className="text-[#4b4453] dark:text-[#b0a8b9]">Gender (Optional)</Label>
-            <Select onValueChange={(value: Gender) => setGender(value)} value={gender}>
-              <SelectTrigger className="w-full mt-1 border-[#845ec2] focus:border-[#845ec2] focus:ring-[#845ec2]">
-                <SelectValue placeholder="Select your gender" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Male">Male</SelectItem>
-                <SelectItem value="Female">Female</SelectItem>
-                <SelectItem value="Non-binary">Non-binary</SelectItem>
-                <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {error && <p className="text-red-500 text-sm mt-2 text-center">{error}</p>}
-          {success && <p className="text-green-500 text-sm mt-2 text-center">{success}</p>}
-
-          <Button
-            type="submit"
-            className="w-full mt-6 bg-[#845ec2] hover:bg-[#6f48a9] text-white"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Saving Profile...' : 'Complete Profile'}
-          </Button>
-        </form>
+                      {/* Submit Button */}
+                      <div className="flex justify-center">
+                        <Button
+                          type="submit"
+                          disabled={isLoading}
+                          className="bg-purple-600 hover:bg-purple-700 text-white font-bold w-full px-16 py-6 transition-transform duration-300 ease-out transform hover:scale-[1.03] text-xl"
+                        >
+                          {isLoading ? "Saving Profile..." : "Complete Profile"}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Filler for the bottom-right slot to balance the grid visually */}
+                <div className="hidden lg:block col-span-1 row-start-3 justify-start"></div>
+                
+            </div> 
+          </form>
+        </motion.div>
       </div>
     </div>
   );
+
 }

@@ -4,7 +4,7 @@ import { PrismaClient } from '@prisma/client';
 // It extends the global object with a property 'prisma' of type PrismaClient or undefined.
 declare global {
   // eslint-disable-next-line no-var
-  var prisma: PrismaClient | undefined;
+  var prisma: PrismaClient;
 }
 
 // Check if a global PrismaClient instance already exists, otherwise create a new one.

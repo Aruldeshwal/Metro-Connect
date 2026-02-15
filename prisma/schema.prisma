@@ -15,7 +15,7 @@ datasource db {
 
 // 1. User Model
 model User {
-  id                     String       @id @default(dbgenerated()) @map("id") // Firebase UID
+  id                     String       @id @default(dbgenerated()) @map("id")
   email                  String?      @unique
   name                   String
   profile_picture_url    String?      @map("profile_picture_url")
@@ -31,8 +31,6 @@ model User {
   is_active              Boolean      @default(true) @map("is_active")
   created_at             DateTime     @default(now()) @map("created_at")
   updated_at             DateTime     @updatedAt @map("updated_at")
-  last_known_location_lat Decimal?    @db.Decimal(10, 7) @map("last_known_location_lat")
-  last_known_location_lon Decimal?    @db.Decimal(10, 7) @map("last_known_location_lon")
 
   // Relations (as previously defined)
   dailyRoutes            UserDailyRoute[]
