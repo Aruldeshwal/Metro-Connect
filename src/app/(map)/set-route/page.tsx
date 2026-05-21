@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Map from 'react-map-gl';
+import Map from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 import { Button } from '@/components/ui/button';

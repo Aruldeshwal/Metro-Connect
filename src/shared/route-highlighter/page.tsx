@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from "react";
-import Map, { Source, Layer } from "react-map-gl";
+import Map, { Source, Layer } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { MetroStation } from "@/types/metrostation";
 
