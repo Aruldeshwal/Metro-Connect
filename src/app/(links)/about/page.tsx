@@ -4,7 +4,7 @@ import React from 'react';
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import { FiHeart } from 'react-icons/fi';
-import { Link } from 'lucide-react';
+import Link from 'next/link';
 import Image from "next/image";
 
 // Placeholder data for team members
@@ -100,6 +100,7 @@ const AboutPage = () => {
                                         alt={`Avatar of ${member.name}`}
                                         width={128}
                                         height={128}
+                                        unoptimized
                                         onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
                                         e.currentTarget.src =
                                             "https://placehold.co/200x200/1a1a1a/ffffff?text=User";

@@ -20,17 +20,43 @@ export default function Home() {
 
       
 
-      <section className="z-20 flex mt-30 mb-50 flex-col md:flex-row items-center justify-center md:justify-between w-full px-6 md:px-20 space-y-10 md:space-y-0 md:space-x-10">
-          {/*Left Side - Header Text and Description*/}
-          <div className="z-20 flex flex-col items-center justify-center space-y-6 w-[70%]">
+      <section className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col items-center justify-center gap-12 px-6 pb-24 pt-32 md:flex-row md:px-10 lg:gap-16 lg:px-8">
+          <div className="z-20 flex w-full flex-col items-center space-y-8 text-center md:w-[56%] md:items-start md:text-left">
             <HeaderText />
             <DescriptionText />
             <GetStartedButton />
           </div>
-          {/*Right Side - Image Placeholder*/}
-          <div className="z-20 w-[80%] md:w-[40%] lg:w-[30%] flex items-center justify-center">
-            <AnimatedNetwork />
-
+          <div className="z-20 flex w-full items-center justify-center md:w-[44%]">
+            <div className="relative w-full max-w-[560px] overflow-hidden rounded-lg border border-cyan-300/20 bg-[#071016]/80 p-4 shadow-2xl shadow-cyan-950/30 backdrop-blur">
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" />
+              <div className="mb-4 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.24em] text-cyan-100/70">
+                <span>Live Route Match</span>
+                <span className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3 py-1 text-emerald-200">Active</span>
+              </div>
+              <div className="relative rounded-lg border border-white/10 bg-black/30">
+                <AnimatedNetwork height={390} />
+                <div className="absolute left-5 top-5 rounded-md border border-white/10 bg-black/55 px-3 py-2 text-sm text-slate-200 shadow-lg backdrop-blur">
+                  Sector 15
+                </div>
+                <div className="absolute bottom-5 right-5 rounded-md border border-white/10 bg-black/55 px-3 py-2 text-sm text-slate-200 shadow-lg backdrop-blur">
+                  Cyber Hub
+                </div>
+              </div>
+              <div className="mt-4 grid grid-cols-3 gap-3 text-center text-sm">
+                <div className="rounded-md border border-white/10 bg-white/[0.04] px-3 py-2">
+                  <p className="text-cyan-200">18 min</p>
+                  <p className="text-slate-500">overlap</p>
+                </div>
+                <div className="rounded-md border border-white/10 bg-white/[0.04] px-3 py-2">
+                  <p className="text-amber-200">3 stops</p>
+                  <p className="text-slate-500">shared</p>
+                </div>
+                <div className="rounded-md border border-white/10 bg-white/[0.04] px-3 py-2">
+                  <p className="text-emerald-200">92%</p>
+                  <p className="text-slate-500">match</p>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 

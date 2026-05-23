@@ -15,6 +15,10 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "types": [
+      "google.maps",
+      "node"
+    ],
     "jsx": "react-jsx",
     "incremental": true,
     "plugins": [

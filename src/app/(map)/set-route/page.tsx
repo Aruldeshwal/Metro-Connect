@@ -31,7 +31,7 @@ const MetroMapContent = () => {
   const { user } = useUser();
   const { graph, isLoading } = useMetroGraph();
   const [stations, setStations] = useState<MetroStation[]>([]);
-  const [lines, setLines] = useState<MetroLine[]>([]);
+  const [, setLines] = useState<MetroLine[]>([]);
   const [startStation, setStartStation] = useState<MetroStation | null>(null);
   const [endStation, setEndStation] = useState<MetroStation | null>(null);
   const [selectedDay, setSelectedDay] = useState('1');

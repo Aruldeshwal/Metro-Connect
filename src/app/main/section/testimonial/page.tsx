@@ -89,7 +89,7 @@ const Testimonials = () => {
               variants={cardVariants}
               className="relative flex flex-col justify-between p-8 bg-gray-900/50 rounded-2xl border border-white/10 transition-transform duration-300 hover:-translate-y-2"
             >
-              <div className="flex-grow">
+              <div className="grow">
                 <FaQuoteLeft className="h-8 w-8 text-purple-500/50 mb-4" />
                 <blockquote className="italic text-gray-300">
                   {`"${testimonial.quote}"`}
@@ -103,6 +103,7 @@ const Testimonials = () => {
                   alt={`Avatar of ${testimonial.name}`}
                   width={48}
                   height={48}
+                  unoptimized
                   onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
                     e.currentTarget.src =
                       "https://placehold.co/100x100/1a1a1a/ffffff?text=User";
