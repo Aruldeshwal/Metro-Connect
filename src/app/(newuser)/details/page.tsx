@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { motion } from "framer-motion";
@@ -32,43 +32,56 @@ type FormData = {
 
 const VerticalConnectorBar = ({ currentStep }: { currentStep: number }) => {
   // Step 1 → 0%, Step 2 → 50%, Step 3 → 100%
-  const progressHeight = (currentStep - 1) * 50;
+  const progress = Math.min(Math.max((currentStep - 1) / 2, 0), 1);
 
   return (
-    <div className="absolute inset-y-0 left-1/2 hidden lg:block h-[calc(76%-5rem)]">
+    <div className="pointer-events-none absolute bottom-28 left-1/2 top-28 hidden w-8 -translate-x-1/2 lg:block">
       {/* Base Line */}
-      <div className="absolute top-80 w-2 h-full bg-slate-700/50 rounded-full transform -translate-x-1/2" />
+      <div className="absolute bottom-0 left-1/2 top-0 w-2 -translate-x-1/2 rounded-full bg-slate-700/50" />
 
       {/* Progress Fill */}
       <motion.div
-        className="absolute w-2 top-80 bg-teal-400 rounded-full transform -translate-x-1/2 origin-top"
-        initial={{ height: "0%" }}
-        animate={{ height: `${progressHeight}%` }}
+        className="absolute bottom-0 left-1/2 top-0 w-2 origin-top -translate-x-1/2 rounded-full bg-teal-400 shadow-[0_0_18px_rgba(45,212,191,0.45)]"
+        initial={{ scaleY: 0 }}
+        animate={{ scaleY: progress }}
         transition={{ duration: 0.8, ease: "easeInOut" }}
-      >
-        {/* Circle at end of progress */}
-        <motion.div
-          className="absolute left-1/2 w-4 h-4 bg-teal-400 rounded-full shadow-[0_0_10px_3px_rgba(45,212,191,0.7)]"
+      />
+      {[0, 0.5, 1].map((stepProgress) => (
+        <div
+          key={stepProgress}
+          className={`absolute left-1/2 h-4 w-4 rounded-full border-2 ${
+            progress >= stepProgress
+              ? "border-teal-300 bg-teal-400 shadow-[0_0_14px_3px_rgba(45,212,191,0.55)]"
+              : "border-slate-600 bg-slate-800"
+          }`}
           style={{
-            bottom: 0, // keeps it stuck to the tip of the progress bar
-            transform: "translate(-50%, 50%)", // centers it horizontally & places it just past the edge
+            top: `${stepProgress * 100}%`,
+            transform: "translate(-50%, -50%)",
           }}
-          layout
-          transition={{ duration: 0.8, ease: "easeInOut" }}
         />
-      </motion.div>
+      ))}
+      <motion.div
+        className="absolute left-1/2 h-5 w-5 rounded-full bg-teal-300 shadow-[0_0_16px_5px_rgba(45,212,191,0.65)]"
+        animate={{ top: `${progress * 100}%` }}
+        transition={{ duration: 0.8, ease: "easeInOut" }}
+        style={{ transform: "translate(-50%, -50%)" }}
+      />
     </div>
   );
 };
 
 
-export default function UserDetailsFormPage() {
-  const { user, isLoaded } = useUser();
+interface UserDetailsFormProps {
+  initialName: string;
+  userId: string;
+}
+
+function UserDetailsForm({ initialName, userId }: UserDetailsFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const router = useRouter();
 
   const [formData, setFormData] = useState<FormData>({
-    name: "",
+    name: initialName,
     bio: "",
     occupation: "",
     birthDate: "",
@@ -79,15 +92,6 @@ export default function UserDetailsFormPage() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (user) {
-      setFormData((prev) => ({
-        ...prev,
-        name: user.fullName || user.username || "",
-      }));
-    }
-  }, [user]);
 
 
 
@@ -116,12 +120,6 @@ export default function UserDetailsFormPage() {
 
   setIsLoading(true);
 
-  if (!user) {
-    setError("User not authenticated.");
-    setIsLoading(false);
-    return;
-  }
-
   try {
     const finalData = {
       name: formData.name,
@@ -138,7 +136,7 @@ export default function UserDetailsFormPage() {
       gender: formData.gender,
     };
 
-    const response = await fetch(`/api/users/${user.id}`, {
+    const response = await fetch(`/api/users/${userId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(finalData),
@@ -161,20 +159,9 @@ export default function UserDetailsFormPage() {
   }
 };
 
-  if (!isLoaded) {
-    return (
-      <div className="flex justify-center items-center h-screen w-screen bg-[#0d0d0d]">
-        <p className="text-gray-400">Loading...</p>
-      </div>
-    );
-  }
-
-
-  
-
   return (
     <div className="flex flex-col items-center justify-start min-h-screen w-screen bg-[#0d0d0d] p-10 lg:p-20"> 
-      <div className="w-full max-w-screen-xl"> 
+      <div className="w-full max-w-7xl"> 
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -195,7 +182,7 @@ export default function UserDetailsFormPage() {
             
                 {/* 1. IDENTITY - TOP LEFT (col 1, row 1) */}
                 {/* JUSTIFY-END to push the card to the right side of the left column (next to the bar) */}
-                <div className="col-span-1 row-start-1 **flex justify-end** z-10 mt-20">
+                <div className="col-span-1 row-start-1 flex justify-end z-10 mt-20">
                   <div className="max-w-xl w-full p-10 bg-slate-800/70 rounded-xl shadow-2xl">
                     <h3 className="text-4xl text-slate-300 flex items-center mb-8 mt-4">
                       <FiUser className="w-10 h-10 mr-5 text-slate-400" /> Your Identity
@@ -256,7 +243,7 @@ export default function UserDetailsFormPage() {
 
                 
                 {/* 2. PERSONAL & PROFESSIONAL - MIDDLE RIGHT (col 2, row 2) */}
-                <div id="personal" className="col-span-1 mt-30 row-start-2 col-start-2 flex justify-end z-10">
+                <div id="personal" className="col-span-1 mt-32 row-start-2 col-start-2 flex justify-end z-10">
                   <div className="max-w-xl w-full p-10 bg-slate-800/70 rounded-xl shadow-2xl">
                     <h3 className="text-4xl text-cyan-400 flex items-center mb-8 mt-4">
                       <FiBriefcase className="w-10 h-10 mr-5 text-cyan-500" /> Personal & Professional
@@ -352,4 +339,31 @@ export default function UserDetailsFormPage() {
     </div>
   );
 
+}
+
+export default function UserDetailsFormPage() {
+  const { user, isLoaded } = useUser();
+
+  if (!isLoaded) {
+    return (
+      <div className="flex justify-center items-center h-screen w-screen bg-[#0d0d0d]">
+        <p className="text-gray-400">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex justify-center items-center h-screen w-screen bg-[#0d0d0d]">
+        <p className="text-gray-400">Please sign in to continue.</p>
+      </div>
+    );
+  }
+
+  return (
+    <UserDetailsForm
+      initialName={user.fullName || user.username || ""}
+      userId={user.id}
+    />
+  );
 }

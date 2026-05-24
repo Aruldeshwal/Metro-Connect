@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Map from 'react-map-gl';
+import Map from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 import { Button } from '@/components/ui/button';
@@ -31,7 +31,7 @@ const MetroMapContent = () => {
   const { user } = useUser();
   const { graph, isLoading } = useMetroGraph();
   const [stations, setStations] = useState<MetroStation[]>([]);
-  const [lines, setLines] = useState<MetroLine[]>([]);
+  const [, setLines] = useState<MetroLine[]>([]);
   const [startStation, setStartStation] = useState<MetroStation | null>(null);
   const [endStation, setEndStation] = useState<MetroStation | null>(null);
   const [selectedDay, setSelectedDay] = useState('1');

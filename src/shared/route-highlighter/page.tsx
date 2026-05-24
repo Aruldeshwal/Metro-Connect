@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from "react";
-import Map, { Source, Layer } from "react-map-gl";
+import React, { useMemo, useState } from "react";
+import Map, { Source, Layer } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { MetroStation } from "@/types/metrostation";
 
 import StationListModal from "../station-list-modal/page";
 
-type AdjacencyList = Map<string, Set<string>>;
+type AdjacencyList = globalThis.Map<string, Set<string>>;
 
 interface MetroRouteHighlighterProps {
   startStation: MetroStation | null;
@@ -24,8 +24,7 @@ const MetroRouteHighlighter: React.FC<MetroRouteHighlighterProps> = ({
   stations,
   shortestPathIds,
 }) => {
-  const [showStationListModal, setShowStationListModal] = useState(false);
-  const [routeStationsForModal, setRouteStationsForModal] = useState<MetroStation[]>([]);
+  const [hiddenRouteKey, setHiddenRouteKey] = useState<string | null>(null);
 
   // 🧭 Convert your route data into GeoJSON for Mapbox
   const polylineGeoJSON = useMemo(() => {
@@ -68,22 +67,18 @@ const MetroRouteHighlighter: React.FC<MetroRouteHighlighterProps> = ({
   }, [shortestPathIds, stations]);
 
   // 🎯 Show station modal
-  useEffect(() => {
-    if (polylineGeoJSON) {
-      const stationsMap = new globalThis.Map<string, MetroStation>(
-        stations.map((s) => [s.id, s] as [string, MetroStation])
-      );
-      const routeStations: MetroStation[] = shortestPathIds
-        .map((id) => stationsMap.get(id))
-        .filter((s): s is MetroStation => !!s);
+  const routeStationsForModal = useMemo(() => {
+    const stationsMap = new globalThis.Map<string, MetroStation>(
+      stations.map((station) => [station.id, station] as [string, MetroStation])
+    );
 
-      setRouteStationsForModal(routeStations);
-      setShowStationListModal(true);
-    } else {
-      setShowStationListModal(false);
-      setRouteStationsForModal([]);
-    }
-  }, [polylineGeoJSON, shortestPathIds, stations]);
+    return shortestPathIds
+      .map((id) => stationsMap.get(id))
+      .filter((station): station is MetroStation => !!station);
+  }, [shortestPathIds, stations]);
+
+  const routeKey = shortestPathIds.join("|");
+  const shouldShowStationListModal = Boolean(polylineGeoJSON && routeKey && hiddenRouteKey !== routeKey);
 
   if (isLoading) return <div>Still loading...</div>;
 
@@ -119,8 +114,8 @@ const MetroRouteHighlighter: React.FC<MetroRouteHighlighterProps> = ({
       </Map>
 
       <StationListModal
-        isOpen={showStationListModal}
-        onClose={() => setShowStationListModal(false)}
+        isOpen={shouldShowStationListModal}
+        onClose={() => setHiddenRouteKey(routeKey)}
         stations={routeStationsForModal}
       />
     </div>

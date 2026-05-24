@@ -8,28 +8,24 @@ interface StationListModalProps {
   stations: MetroStation[];
 }
 
+const DownArrow = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" stroke="#4A5568" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="6 9 12 15 18 9"></polyline>
+  </svg>
+);
+
+const UpArrow = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" stroke="#4A5568" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="18 15 12 9 6 15"></polyline>
+  </svg>
+);
+
 const StationListModal: React.FC<StationListModalProps> = ({ isOpen, onClose, stations }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-
-  React.useEffect(() => {
-    if (isOpen) setIsExpanded(false);
-  }, [isOpen, stations]);
 
   if (!isOpen || stations.length === 0) return null;
 
   const totalStations = stations.length;
-
-  const DownArrow = () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" stroke="#4A5568" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="6 9 12 15 18 9"></polyline>
-    </svg>
-  );
-
-  const UpArrow = () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" stroke="#4A5568" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="18 15 12 9 6 15"></polyline>
-    </svg>
-  );
 
   return (
     <div
@@ -100,6 +96,7 @@ const StationListModal: React.FC<StationListModalProps> = ({ isOpen, onClose, st
       <button
         onClick={(e) => {
           e.stopPropagation();
+          setIsExpanded(false);
           onClose();
         }}
         style={{

@@ -1,15 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Poppins } from 'next/font/google';
-
-const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'], // adjust weights as needed
-  variable: '--font-poppins'
-});
-
-
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -23,7 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en" className={`${poppins.variable}`}>
+      <html lang="en">
         <body className="font-sans">
           {children}
         </body>
