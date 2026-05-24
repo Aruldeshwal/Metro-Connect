@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import Logo from "../../logo/page";
-import ButtonSignupLogin from "../../button/signup-login/page";
-import NavLinks from "../../button/nav-links/page";
+import Logo from "./Logo";
+import ButtonSignupLogin from "./SignupLoginButtons";
+import NavLinks from "./NavLinks";
 
 const Navbar = () => {
   const [isSolid, setIsSolid] = useState(false);

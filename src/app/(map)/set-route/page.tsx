@@ -23,7 +23,7 @@ import useFetchStationAndLine from '@/hooks/useFetchStationandLines';
 import { MetroStation } from '@/types/metrostation';
 import { MetroLine } from '@/types/metroline';
 import { useMetroGraph } from '@/hooks/useMetroGraph';
-import MetroRouteHighlighter from '@/shared/route-highlighter/page';
+import MetroRouteHighlighter from '@/components/shared/RouteHighlighter';
 import { useUser } from '@clerk/nextjs';
 import { findShortestRoute } from '@/lib/graph/findShortestRoute';
 

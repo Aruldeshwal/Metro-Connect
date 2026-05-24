@@ -1,8 +1,8 @@
 "use client";
 import React, { useState } from "react";
 import { motion, easeInOut } from "framer-motion";
-import SplitText from "@/blocks/TextAnimations/SplitText/SplitText";
-import LineALinkLogo from "../../../../public/images/logo/Line-A-Link.png";
+import SplitText from "@/components/blocks/TextAnimations/SplitText/SplitText";
+import LineALinkLogo from "../../../public/images/logo/Line-A-Link.png";
 import Image from "next/image";
 
 const MotionImage = motion(Image);

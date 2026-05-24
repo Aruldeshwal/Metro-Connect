@@ -1,14 +1,14 @@
 "use client";
-import GetStartedButton from "./main/button/get-started/page";
-import HeaderText from "./main/text/header-text/page";
-import DarkVeil from "@/blocks/Backgrounds/DarkVeil/DarkVeil";
-import HowItWorks from "./main/section/how-it-works/page";
-import Features from "./main/section/features/page";
-import Testimonials from "./main/section/testimonial/page";
-import Footer from "./main/section/footer/page";
-import DescriptionText from "./main/text/description-text/page";
+import GetStartedButton from "@/components/landing/GetStartedButton";
+import HeaderText from "@/components/landing/HeaderText";
+import DarkVeil from "@/components/blocks/Backgrounds/DarkVeil/DarkVeil";
+import HowItWorks from "@/components/landing/HowItWorks";
+import Features from "@/components/landing/Features";
+import Testimonials from "@/components/landing/Testimonials";
+import Footer from "@/components/landing/Footer";
+import DescriptionText from "@/components/landing/DescriptionText";
 import AnimatedNetwork from "@/components/ui/AnimatedNetwork";
-import Navbar from "./main/section/navbar/page";
+import Navbar from "@/components/landing/Navbar";
 
 export default function Home() {
   return (
@@ -27,8 +27,8 @@ export default function Home() {
             <GetStartedButton />
           </div>
           <div className="z-20 flex w-full items-center justify-center md:w-[44%]">
-            <div className="relative w-full max-w-[560px] overflow-hidden rounded-lg border border-cyan-300/20 bg-[#071016]/80 p-4 shadow-2xl shadow-cyan-950/30 backdrop-blur">
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" />
+            <div className="relative w-full max-w-140 overflow-hidden rounded-lg border border-cyan-300/20 bg-[#071016]/80 p-4 shadow-2xl shadow-cyan-950/30 backdrop-blur">
+              <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-cyan-300/70 to-transparent" />
               <div className="mb-4 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.24em] text-cyan-100/70">
                 <span>Live Route Match</span>
                 <span className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3 py-1 text-emerald-200">Active</span>
@@ -43,15 +43,15 @@ export default function Home() {
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-3 gap-3 text-center text-sm">
-                <div className="rounded-md border border-white/10 bg-white/[0.04] px-3 py-2">
+                <div className="rounded-md border border-white/10 bg-white/4 px-3 py-2">
                   <p className="text-cyan-200">18 min</p>
                   <p className="text-slate-500">overlap</p>
                 </div>
-                <div className="rounded-md border border-white/10 bg-white/[0.04] px-3 py-2">
+                <div className="rounded-md border border-white/10 bg-white/4 px-3 py-2">
                   <p className="text-amber-200">3 stops</p>
                   <p className="text-slate-500">shared</p>
                 </div>
-                <div className="rounded-md border border-white/10 bg-white/[0.04] px-3 py-2">
+                <div className="rounded-md border border-white/10 bg-white/4 px-3 py-2">
                   <p className="text-emerald-200">92%</p>
                   <p className="text-slate-500">match</p>
                 </div>
