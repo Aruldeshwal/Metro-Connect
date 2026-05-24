@@ -2,6 +2,8 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { useIcebreakers } from "@/hooks/useIcebreakers";
+import { useSmartReplies } from "@/hooks/useSmartReplies";
 import {
   FiSend,
   FiPhone,
@@ -9,6 +11,9 @@ import {
   FiMoreVertical,
   FiSmile,
   FiPaperclip,
+  FiZap,
+  FiRefreshCw,
+  FiMessageCircle,
 } from "react-icons/fi";
 
 const initialMessages = [
@@ -35,6 +40,17 @@ const initialMessages = [
 export default function ChatPage() {
   const [messages, setMessages] = useState(initialMessages);
   const [input, setInput] = useState("");
+  
+  // Placeholder IDs for demo purposes
+  const chatContext = {
+    currentUserId: "user_123",
+    targetUserId: "user_456",
+    conversationId: "conv_789",
+    matchId: "match_000",
+  };
+
+  const { suggestions: icebreakers, isLoading: isIcebreakersLoading, fetchIcebreakers } = useIcebreakers(chatContext);
+  const { replies: smartReplies, isLoading: isSmartRepliesLoading, fetchSmartReplies } = useSmartReplies(chatContext);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -42,15 +58,21 @@ export default function ChatPage() {
     bottomRef.current?.scrollIntoView({
       behavior: "smooth",
     });
-  }, [messages]);
+    
+    // Auto-fetch smart replies if last message is from other
+    if (messages.length > 0 && messages[messages.length - 1].sender === "other") {
+      fetchSmartReplies();
+    }
+  }, [messages, fetchSmartReplies]);
 
-  const sendMessage = () => {
-    if (!input.trim()) return;
+  const sendMessage = (textToSend?: string) => {
+    const messageText = textToSend || input;
+    if (!messageText.trim()) return;
 
     const newMessage = {
       id: Date.now(),
       sender: "me",
-      text: input,
+      text: messageText,
       time: new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
@@ -58,7 +80,7 @@ export default function ChatPage() {
     };
 
     setMessages((prev) => [...prev, newMessage]);
-    setInput("");
+    if (!textToSend) setInput("");
 
     // Fake realtime reply
     setTimeout(() => {
@@ -76,6 +98,9 @@ export default function ChatPage() {
       ]);
     }, 1200);
   };
+
+  const allSuggestions = [...icebreakers, ...smartReplies];
+  const isAnyLoading = isIcebreakersLoading || isSmartRepliesLoading;
 
   return (
     <div className="h-screen bg-black text-white flex overflow-hidden">
@@ -204,9 +229,63 @@ export default function ChatPage() {
           <div ref={bottomRef} />
         </div>
 
+        {/* AI SUGGESTIONS (Icebreakers & Smart Replies) */}
+        {allSuggestions.length > 0 && !isAnyLoading && (
+          <div className="px-6 py-3 flex gap-3 overflow-x-auto no-scrollbar bg-black/20 backdrop-blur-sm border-t border-white/5">
+            {allSuggestions.map((suggestion, index) => {
+              const isSmartReply = smartReplies.includes(suggestion);
+              return (
+                <button
+                  key={index}
+                  onClick={() => sendMessage(suggestion)}
+                  className={`whitespace-nowrap border px-4 py-2 rounded-full text-sm transition-all duration-200 flex items-center gap-2 group ${
+                    isSmartReply 
+                      ? "bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20 text-emerald-200"
+                      : "bg-violet-500/10 border-violet-500/20 hover:bg-violet-500/20 text-violet-200"
+                  }`}
+                >
+                  {isSmartReply ? (
+                    <FiMessageCircle className="text-emerald-400 group-hover:scale-110 transition-transform" />
+                  ) : (
+                    <FiZap className="text-violet-400 group-hover:scale-110 transition-transform" />
+                  )}
+                  {suggestion}
+                </button>
+              );
+            })}
+            <button 
+              onClick={() => {
+                if (smartReplies.length > 0) fetchSmartReplies();
+                else fetchIcebreakers();
+              }}
+              className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-zinc-400 transition-colors"
+              title="Regenerate suggestions"
+            >
+              <FiRefreshCw size={14} className={isAnyLoading ? "animate-spin" : ""} />
+            </button>
+          </div>
+        )}
+
+        {isAnyLoading && (
+          <div className="px-6 py-3 flex gap-3 bg-black/20 backdrop-blur-sm border-t border-white/5">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-9 w-32 animate-pulse bg-white/5 rounded-full border border-white/10" />
+            ))}
+          </div>
+        )}
+
         {/* INPUT */}
         <div className="p-5 border-t border-white/10 bg-black/40 backdrop-blur-xl">
           <div className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-3xl px-5 py-3">
+            <button 
+              onClick={fetchIcebreakers}
+              disabled={isAnyLoading}
+              className={`text-violet-400 hover:text-violet-300 transition-all duration-200 ${isAnyLoading ? 'animate-spin' : 'hover:scale-110'}`}
+              title="Get AI Icebreakers"
+            >
+              <FiZap size={22} fill={icebreakers.length > 0 ? "currentColor" : "none"} />
+            </button>
+
             <button className="text-zinc-400 hover:text-white transition">
               <FiSmile size={22} />
             </button>
@@ -227,8 +306,8 @@ export default function ChatPage() {
             />
 
             <button
-              onClick={sendMessage}
-              className="h-12 w-12 rounded-full bg-violet-600 hover:bg-violet-700 flex items-center justify-center transition"
+              onClick={() => sendMessage()}
+              className="h-12 w-12 rounded-full bg-violet-600 hover:bg-violet-700 flex items-center justify-center transition shadow-lg shadow-violet-600/20"
             >
               <FiSend size={20} />
             </button>

@@ -1,9 +1,6 @@
 import { buildIcebreakerPrompt } from "@/lib/ai/prompts/buildIcebreakerPrompt";
-
-import { geminiModel } from "@/lib/ai/providers/gemini";
-
+import { generateWithFallback } from "@/lib/ai/providers/fallback";
 import { getMatchWithUsersAndRoutes } from "@/server/queries/match";
-
 import { getRecentMessages } from "@/server/queries/message";
 
 export async function POST(req: Request) {
@@ -47,19 +44,19 @@ export async function POST(req: Request) {
       recentMessages,
     });
 
-    const result =
-      await geminiModel.generateContent(prompt);
-
-    const text = result.response.text();
+    const text = await generateWithFallback(prompt);
 
     let suggestions: string[] = [];
 
     try {
-      suggestions = JSON.parse(text);
+      // Clean up the text in case it has markdown code blocks
+      const cleanedText = text.replace(/```json\n?|```/g, "").trim();
+      suggestions = JSON.parse(cleanedText);
     } catch {
       suggestions = text
         .split("\n")
-        .filter(Boolean);
+        .map(s => s.trim().replace(/^-\s*/, ""))
+        .filter(s => s.length > 0 && !s.startsWith("[") && !s.endsWith("]"));
     }
 
     return Response.json({

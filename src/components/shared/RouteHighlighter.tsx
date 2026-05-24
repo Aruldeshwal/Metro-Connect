@@ -5,7 +5,7 @@ import Map, { Source, Layer } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { MetroStation } from "@/types/metrostation";
 
-import StationListModal from "../station-list-modal/page";
+import StationListModal from "./StationListModal";
 
 type AdjacencyList = globalThis.Map<string, Set<string>>;
 

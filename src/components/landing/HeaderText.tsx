@@ -1,5 +1,5 @@
 "use client";
-import RotatingText from "@/blocks/TextAnimations/RotatingText/RotatingText";
+import RotatingText from "@/components/blocks/TextAnimations/RotatingText/RotatingText";
 import React from "react";
 
 const HeaderText = () => {

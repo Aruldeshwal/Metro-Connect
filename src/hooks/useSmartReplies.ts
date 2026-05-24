@@ -2,28 +2,26 @@
 
 import { useState, useCallback } from "react";
 
-interface UseIcebreakersProps {
+interface UseSmartRepliesProps {
   currentUserId: string;
   targetUserId: string;
   conversationId: string;
-  matchId: string;
 }
 
-export function useIcebreakers({
+export function useSmartReplies({
   currentUserId,
   targetUserId,
   conversationId,
-  matchId,
-}: UseIcebreakersProps) {
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+}: UseSmartRepliesProps) {
+  const [replies, setReplies] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchIcebreakers = useCallback(async () => {
+  const fetchSmartReplies = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/icebreaker/generate", {
+      const response = await fetch("/api/messages/smart-reply", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -32,22 +30,21 @@ export function useIcebreakers({
           currentUserId,
           targetUserId,
           conversationId,
-          matchId,
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch icebreakers");
+        throw new Error("Failed to fetch smart replies");
       }
 
       const data = await response.json();
-      setSuggestions(data.suggestions);
+      setReplies(data.replies);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setIsLoading(false);
     }
-  }, [currentUserId, targetUserId, conversationId, matchId]);
+  }, [currentUserId, targetUserId, conversationId]);
 
-  return { suggestions, isLoading, error, fetchIcebreakers };
+  return { replies, isLoading, error, fetchSmartReplies };
 }
