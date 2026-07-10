@@ -106,7 +106,7 @@ function UserDetailsForm({ initialName, userId }: UserDetailsFormProps) {
     setFormData((prev) => ({ ...prev, gender: value }));
   };
 
-  const handleFinalSubmit = async (e: React.FormEvent) => {
+  const handleFinalSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
   e.preventDefault();
 
   setError(null);
