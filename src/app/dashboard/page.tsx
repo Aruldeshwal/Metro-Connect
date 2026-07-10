@@ -14,6 +14,8 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useRecommendations } from "@/hooks/useRecommendations";
+import { toast, Toaster } from "sonner";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -37,25 +39,18 @@ const itemVariants: Variants = {
   },
 };
 
-const matches = [
-  {
-    name: "Sophia Carter",
-    station: "HUDA City Centre",
-    compatibility: "92%",
-    avatar:
-      "https://placehold.co/100x100/7c3aed/ffffff?text=SC",
-  },
-  {
-    name: "Emma Wilson",
-    station: "Saket",
-    compatibility: "88%",
-    avatar:
-      "https://placehold.co/100x100/2563eb/ffffff?text=EW",
-  },
-];
-
 export default function DashboardPage() {
   const { user, isLoaded } = useUser();
+  const { recommendations, hasActiveRoutes, isLoading: recommendationsLoading, connect } = useRecommendations(user?.id);
+
+  const handleConnect = async (rec: any) => {
+    try {
+      await connect(rec.user.id, rec.myRouteId, rec.route.id, rec.matchScore);
+      toast.success(`Connection request sent to ${rec.user.name}!`);
+    } catch (err) {
+      toast.error("Failed to send connection request");
+    }
+  };
 
   if (!isLoaded) {
     return (
@@ -67,6 +62,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden">
+      <Toaster position="top-center" richColors />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,#6d28d933,transparent_25%),radial-gradient(circle_at_bottom_left,#2563eb22,transparent_30%)]" />
 
       <motion.div
@@ -271,53 +267,122 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="mt-8 space-y-5">
-            {matches.map((match, index) => (
+          <div className="mt-8 space-y-5 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+            {recommendationsLoading && (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-32 w-full animate-pulse bg-white/5 rounded-2xl border border-white/10" />
+                ))}
+              </div>
+            )}
+            
+            {!recommendationsLoading && !hasActiveRoutes && (
+              <div className="text-center py-10 px-4">
+                <div className="bg-violet-500/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-violet-500/20">
+                  <FiMapPin className="text-2xl text-violet-400" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">No Routes Set</h3>
+                <p className="text-zinc-500 text-sm mb-6">
+                  Set your daily commute route to start seeing compatible commuters.
+                </p>
+                <Link href="/set-route">
+                  <Button className="w-full rounded-xl bg-violet-600 hover:bg-violet-700">
+                    Set My Daily Route
+                  </Button>
+                </Link>
+              </div>
+            )}
+
+            {!recommendationsLoading && hasActiveRoutes && recommendations.length === 0 && (
+              <div className="text-center py-10 px-4">
+                <div className="bg-emerald-500/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
+                  <FiUsers className="text-2xl text-emerald-400" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">Searching for Matches</h3>
+                <p className="text-zinc-500 text-sm mb-2">
+                  We've saved your route! 
+                </p>
+                <p className="text-zinc-500 text-xs">
+                  We'll notify you as soon as someone with a similar path joins.
+                </p>
+              </div>
+            )}
+
+            {recommendations.map((rec, index) => (
               <div
                 key={index}
-                className="rounded-2xl border border-white/10 bg-black/30 p-5"
+                className="rounded-2xl border border-white/10 bg-black/30 p-5 hover:bg-white/5 transition-colors group"
               >
                 <div className="flex items-center gap-4">
-                  <Image
-                    src={match.avatar}
-                    alt={match.name}
-                    width={64}
-                    height={64}
-                    className="rounded-full"
-                  />
+                  <div className="relative">
+                    <Image
+                      src={rec.user.profile_picture_url || `https://placehold.co/100x100/7c3aed/ffffff?text=${rec.user.name.charAt(0)}`}
+                      alt={rec.user.name}
+                      width={64}
+                      height={64}
+                      className="rounded-full border-2 border-transparent group-hover:border-violet-500/50 transition-all"
+                    />
+                    <div className="absolute -bottom-1 -right-1 bg-emerald-500 w-4 h-4 rounded-full border-2 border-black" />
+                  </div>
 
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg">
-                      {match.name}
+                      {rec.user.name}
                     </h3>
 
-                    <p className="text-sm text-zinc-400">
-                      {match.station}
+                    <p className="text-sm text-zinc-400 truncate max-w-[120px]">
+                      {rec.route.startStation.name}
                     </p>
                   </div>
 
                   <div className="text-right">
-                    <p className="text-violet-400 font-bold">
-                      {match.compatibility}
-                    </p>
-
-                    <p className="text-xs text-zinc-500">
-                      Match
-                    </p>
+                    <div className="relative inline-flex items-center justify-center">
+                      <svg className="w-12 h-12 transform -rotate-90">
+                        <circle
+                          cx="24"
+                          cy="24"
+                          r="20"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          fill="transparent"
+                          className="text-white/10"
+                        />
+                        <circle
+                          cx="24"
+                          cy="24"
+                          r="20"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          fill="transparent"
+                          strokeDasharray={125.6}
+                          strokeDashoffset={125.6 - (125.6 * rec.matchScore) / 100}
+                          className="text-violet-500 transition-all duration-1000"
+                        />
+                      </svg>
+                      <span className="absolute text-[10px] font-bold">
+                        {Math.round(rec.matchScore)}%
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-zinc-500 mt-1 uppercase tracking-wider">Overlap</p>
                   </div>
                 </div>
 
-                <div className="mt-5 flex gap-3">
-                  <Button className="flex-1 rounded-xl bg-violet-600 hover:bg-violet-700">
+                <div className="mt-5 flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button 
+                    onClick={() => handleConnect(rec)}
+                    className="flex-1 rounded-xl bg-violet-600 hover:bg-violet-700 h-9 text-sm"
+                  >
                     Connect
                   </Button>
 
-                  <Button
-                    variant="outline"
-                    className="rounded-xl border-white/10 bg-transparent hover:bg-white/10"
-                  >
-                    View
-                  </Button>
+                  <Link href={`/profile/${rec.user.id}`} className="flex-1">
+                    <Button
+                      variant="outline"
+                      className="w-full rounded-xl border-white/10 bg-transparent hover:bg-white/10 h-9 text-sm"
+                    >
+                      Profile
+                    </Button>
+                  </Link>
                 </div>
               </div>
             ))}

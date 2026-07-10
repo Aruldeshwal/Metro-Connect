@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useIcebreakers } from "@/hooks/useIcebreakers";
 import { useSmartReplies } from "@/hooks/useSmartReplies";
+import { useRealtimeChat } from "@/hooks/useRealtimeChat";
 import {
   FiSend,
   FiPhone,
@@ -41,7 +42,6 @@ export default function ChatPage() {
   const [messages, setMessages] = useState(initialMessages);
   const [input, setInput] = useState("");
   
-  // Placeholder IDs for demo purposes
   const chatContext = {
     currentUserId: "user_123",
     targetUserId: "user_456",
@@ -49,10 +49,19 @@ export default function ChatPage() {
     matchId: "match_000",
   };
 
+  const { 
+    messages: realtimeMessages, 
+    sendMessage: emitMessage, 
+    isConnected 
+  } = useRealtimeChat(chatContext.conversationId, chatContext.currentUserId);
+
   const { suggestions: icebreakers, isLoading: isIcebreakersLoading, fetchIcebreakers } = useIcebreakers(chatContext);
   const { replies: smartReplies, isLoading: isSmartRepliesLoading, fetchSmartReplies } = useSmartReplies(chatContext);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
+
+  // Combine initial/history messages with real-time ones
+  const allMessages = [...initialMessages, ...realtimeMessages];
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({
@@ -60,43 +69,18 @@ export default function ChatPage() {
     });
     
     // Auto-fetch smart replies if last message is from other
-    if (messages.length > 0 && messages[messages.length - 1].sender === "other") {
+    if (allMessages.length > 0 && allMessages[allMessages.length - 1].sender === "other") {
       fetchSmartReplies();
     }
-  }, [messages, fetchSmartReplies]);
+  }, [allMessages, fetchSmartReplies]);
 
   const sendMessage = (textToSend?: string) => {
     const messageText = textToSend || input;
     if (!messageText.trim()) return;
 
-    const newMessage = {
-      id: Date.now(),
-      sender: "me",
-      text: messageText,
-      time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-
-    setMessages((prev) => [...prev, newMessage]);
+    emitMessage(messageText);
+    
     if (!textToSend) setInput("");
-
-    // Fake realtime reply
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now() + 1,
-          sender: "other",
-          text: "Sounds good.",
-          time: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        },
-      ]);
-    }, 1200);
   };
 
   const allSuggestions = [...icebreakers, ...smartReplies];
@@ -193,38 +177,47 @@ export default function ChatPage() {
 
         {/* MESSAGES */}
         <div className="flex-1 overflow-y-auto px-6 py-8 space-y-6">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${
-                message.sender === "me"
-                  ? "justify-end"
-                  : "justify-start"
-              }`}
-            >
+          {!isConnected && (
+            <div className="flex justify-center">
+              <span className="text-xs bg-amber-500/10 text-amber-500 px-3 py-1 rounded-full border border-amber-500/20">
+                Reconnecting...
+              </span>
+            </div>
+          )}
+          {allMessages.map((message: any) => {
+            const isMe = message.sender === "me" || message.sender_id === chatContext.currentUserId;
+            const text = message.text || message.content;
+            const time = message.time || new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            return (
               <div
-                className={`max-w-[75%] rounded-3xl px-5 py-4 border ${
-                  message.sender === "me"
-                    ? "bg-violet-600 border-violet-500"
-                    : "bg-white/5 border-white/10"
+                key={message.id}
+                className={`flex ${
+                  isMe ? "justify-end" : "justify-start"
                 }`}
               >
-                <p className="text-[15px] leading-relaxed">
-                  {message.text}
-                </p>
-
                 <div
-                  className={`text-xs mt-2 ${
-                    message.sender === "me"
-                      ? "text-violet-200"
-                      : "text-zinc-500"
+                  className={`max-w-[75%] rounded-3xl px-5 py-4 border ${
+                    isMe
+                      ? "bg-violet-600 border-violet-500 text-white"
+                      : "bg-white/5 border-white/10 text-zinc-100"
                   }`}
                 >
-                  {message.time}
+                  <p className="text-[15px] leading-relaxed">
+                    {text}
+                  </p>
+
+                  <div
+                    className={`text-xs mt-2 ${
+                      isMe ? "text-violet-200" : "text-zinc-500"
+                    }`}
+                  >
+                    {time}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           <div ref={bottomRef} />
         </div>
