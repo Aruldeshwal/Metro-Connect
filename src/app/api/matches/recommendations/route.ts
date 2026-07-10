@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { findMatchRecommendations } from "@/server/queries/match";
+import { prisma } from "@/lib/database";
 
 export async function GET(req: Request) {
   try {
