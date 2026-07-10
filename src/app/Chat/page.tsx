@@ -69,8 +69,13 @@ export default function ChatPage() {
     });
     
     // Auto-fetch smart replies if last message is from other
-    if (allMessages.length > 0 && allMessages[allMessages.length - 1].sender === "other") {
-      fetchSmartReplies();
+    if (allMessages.length > 0) {
+      const lastMsg = allMessages[allMessages.length - 1];
+      const isOther = ('sender' in lastMsg && lastMsg.sender === "other") || 
+                      ('sender_id' in lastMsg && lastMsg.sender_id !== chatContext.currentUserId);
+      if (isOther) {
+        fetchSmartReplies();
+      }
     }
   }, [allMessages, fetchSmartReplies]);
 
